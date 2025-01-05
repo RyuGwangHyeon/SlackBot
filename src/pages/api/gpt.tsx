@@ -1,8 +1,12 @@
+import type { NextApiRequest, NextApiResponse } from "next";
 import axios from "axios";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-export default async function handler(req, res) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method === "POST") {
     const { imageUrls } = req.body;
 
