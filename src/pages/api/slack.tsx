@@ -1,3 +1,4 @@
+import type { NextApiRequest, NextApiResponse } from "next";
 import { App } from "@slack/bolt";
 import axios from "axios";
 
@@ -10,7 +11,10 @@ const app = new App({
   socketMode: true,
 });
 
-export default async function handler(req, res) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method === "POST") {
     const { type, event } = req.body;
 
