@@ -1,35 +1,35 @@
-import { openai } from "@ai-sdk/openai";
-import { streamText } from "ai";
+import type { NextApiRequest, NextApiResponse } from "next";
+import axios from "axios";
 
-export const maxDuration = 30;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-export async function POST(request: Request) {
-  const { messages } = await request.json();
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method === "POST") {
+    const { imageUrls } = req.body;
 
-  const result = streamText({
-    model: openai("gpt-4o"),
-    system: `
-			Check the differences between the web page design that client wants to have and that of the developer had made so far.
+    const response = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        model: "gpt-4",
+        messages: imageUrls.map((url: string) => ({
+          role: "user",
+          content: "다음 이미지를 분석해줘.",
+          image_url: url,
+        })),
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-			The user will give GPT two web page images: one is the original design that client wants, and the other is the result of developer's code.
-
-			The form of the file names will be 'xxx_원본.png' and 'xxx_오류.png'.
-			'xxx_원본.png' is the original design.
-			'xxx_오류.png' is the work in progress.
-
-			This GPT needs to seek for the differences in CSS margin, padding, and other styles that is affecting the position of the elements found in the above web page images.
-
-			In short, look for the CSS style differences between the two images.
-			Especially look for the below CSS styles:
-			margin,
-			padding,
-			border-radius,
-			gap.
-
-			Give the full, detailed response that is at least 500 words long.
-		`,
-    messages,
-  });
-
-  return result.toDataStreamResponse();
+    res.status(200).json({ reply: response.data.choices[0].message.content });
+  } else {
+    res.status(405).json({ error: "Method Not Allowed" });
+  }
 }
